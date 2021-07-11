@@ -1,0 +1,32 @@
+{
+  "name": "6502-simulator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "functional": "nodemon test/6502_functional_test.ts",
+    "test": "nyc --reporter=html ./node_modules/.bin/_mocha --config mocharc.json 'test/**/*.unit.test.ts'",
+    "myfirst": "nodemon examples/myfirst.ts",
+    "helloworld": "nodemon examples/helloworld.ts",
+    "build": "tsc --project ./"
+  },
+  "keywords": [],
+  "author": "Carl Edwards",
+  "license": "ISC",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@sinonjs/fake-timers": "^7.1.2",
+    "@testdeck/mocha": "^0.1.2",
+    "chai": "^4.3.4",
+    "mocha": "^9.0.1",
+    "nyc": "^15.1.0",
+    "ts-mockito": "^2.6.1",
+    "@types/chai": "^4.2.19",
+    "@types/node": "^15.12.4",
+    "@types/sinonjs__fake-timers": "^6.0.2",
+    "nodemon": "^2.0.7",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.3.4"
+  }
+}
