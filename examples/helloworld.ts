@@ -136,6 +136,15 @@ runner.on("execOpcode", (reg: Register, opcode: Opcode) => {
         + ` [${statusFlags.join('')}] [${reg.p.toString(2).padStart(8, '0')}] mode:${AddressMode[opcode.addrMode]}`);
 });
 
+runner.on("irq", (currentPc: number) => {
+    console.log (`IRQ at pc: ${toHexWord(currentPc)}`);
+});
+
+runner.on("nmi", (currentPc: number) => {
+    console.log (`NMI at pc: ${toHexWord(currentPc)}`);
+});
+
+
 via6522.on("PORTA", (prevValue:number, newValue:number) => {
     console.log (`\n\nPORT-A LED: 0b${newValue.toString(2).padStart(8, '0')}\n\n`);
 });

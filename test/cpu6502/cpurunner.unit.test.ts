@@ -104,6 +104,13 @@ class My6502Internals {
             {
                 startAddr: 0x0400,
             });
+        let events = [];
+        runner.on("irq", (currentPc: number) => {
+            events.push({"event": "irq", currentPc: currentPc});
+        });
+        runner.on("nmi", (currentPc: number) => {
+            events.push({"event": "nmi", currentPc: currentPc});
+        });
         runner.setBusOperations(this.busOps);
 
         // perform reset
@@ -163,6 +170,11 @@ class My6502Internals {
                 { addr: 0x01FE, data: 0x02 }, // current PC lo byte
                 { addr: 0x01FD, data: 0x20 }, // current status flags
             ]);
+        assert.deepEqual(events, 
+            [
+                {"event": "irq", "currentPc": 0x0402},
+            ]
+        );
     }
 
     @test 'nmi'() {
@@ -170,6 +182,13 @@ class My6502Internals {
             {
                 startAddr: 0x0400,
             });
+        let events = [];
+        runner.on("irq", (currentPc: number) => {
+            events.push({"event": "irq", currentPc: currentPc});
+        });
+        runner.on("nmi", (currentPc: number) => {
+            events.push({"event": "nmi", currentPc: currentPc});
+        });
         runner.setBusOperations(this.busOps);
 
         // perform reset
@@ -215,6 +234,11 @@ class My6502Internals {
                 { addr: 0x01FE, data: 0x01 }, // current PC lo byte
                 { addr: 0x01FD, data: 0x24 }, // current status flags
             ]);
+        assert.deepEqual(events, 
+            [
+                {"event": "nmi", "currentPc": 0x0401},
+            ]
+        );
     }
 
     @test 'reset with empty config'() {

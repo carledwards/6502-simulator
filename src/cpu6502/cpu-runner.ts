@@ -48,6 +48,7 @@ export class CpuRunner extends Opcodes implements Cpu {
     }
 
     onNMI(): void {
+        this.emit('nmi', this.reg.pc);
         this.stackPushWord(this.reg.pc, "nmi - pc");
         this.stackPushByte(this.reg.p, "nmi - status flag");
         this.reg.setStatusFlag(StatusFlag.Break, false);
@@ -59,6 +60,7 @@ export class CpuRunner extends Opcodes implements Cpu {
 
     onIRQ(): boolean {
         if (!this.reg.isFlag(StatusFlag.Interrupt)) {
+            this.emit('irq', this.reg.pc);
             this.stackPushWord(this.reg.pc, "irq - pc");
             this.stackPushByte(this.reg.p, "irq - status flag");
             this.reg.setStatusFlag(StatusFlag.Break, false);

@@ -31,6 +31,7 @@ Sample output:
 	pc:E014 JMP:4C - a:FF x:00 y:00 sp:FF [Nv-bdizc] [10100000] mode:ABSO
 		addr - abs lo - 0x13 read from $E015
 		addr - abs hi - 0xE0 read from $E016
+	IRQ at pc: E013
 		irq - pc hi - 0xE0 written to $01FF
 		irq - pc lo - 0x13 written to $01FE
 		irq - status flag - 0xA0 written to $01FD
@@ -160,6 +161,8 @@ To "listen in" on different components in the system, there are Emitter Events a
 | CpuRunner | readData | `context` - (string) description of the operation, `addr` - (number) address being read, `data` - (number) data returned from the read |
 | CpuRunner | writeData | `context` - (string) description of the operation, `addr` - (number) address being written to, `data` - (number) data being written |
 | CpuRunner | execOpcode | `reg` - (internals.Register) all of the CPU internal registers, `opcodeDef` - (opcodes.Opcode) definition of the opcode |
+| CpuRunner | irq | `currentPc` - (number) current program counter |
+| CpuRunner | nmi | `currentPc` - (number) current program counter |
 | Via6522 | DDRA | `prevValue` - (number) previous value of this register, `newValue` - (number) new value |
 | Via6522 | DDRB | `prevValue` - (number) previous value of this register, `newValue` - (number) new value |
 | Via6522 | PORTA | `prevValue` - (number) previous value of this register, `newValue` - (number) new value |
