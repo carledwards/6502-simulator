@@ -178,7 +178,9 @@ Download Klaus2m5's file: [6502\_functional\_test.bin](https://github.com/Klaus2
 	yarn functional
 
 ## Errata
-Not all of the timing penalties have been implemented/verified. Something for the future for completeness.
+
+* Not all of the timing penalties have been implemented/verified. Something for the future for completeness.
+* Decimal mode is not implemented
 
 ## Special Thanks To...
 This project utilized multiple different existing resources.  I really appreciate all of their hard work they have put in to building their simulators and being a reference:
