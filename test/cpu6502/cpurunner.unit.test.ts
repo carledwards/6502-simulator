@@ -111,6 +111,12 @@ class My6502Internals {
         runner.on("nmi", (currentPc: number) => {
             events.push({"event": "nmi", currentPc: currentPc});
         });
+        runner.on("writeData", (context: string, addr: number, value: number) => {
+            events.push({"event": "writeData", "addr": addr, "value": value});
+        });
+        runner.on("readData", (context: string, addr: number, value: number) => {
+            events.push({"event": "readData", "addr": addr, "value": value});
+        });
         runner.setBusOperations(this.busOps);
 
         // perform reset
@@ -172,7 +178,15 @@ class My6502Internals {
             ]);
         assert.deepEqual(events, 
             [
-                {"event": "irq", "currentPc": 0x0402},
+                { event: 'readData', addr: 0x0400, value: 234 },
+                { event: 'readData', addr: 0x0401, value: 2 },
+                { event: 'irq', currentPc: 0x0402 },
+                { event: 'writeData', addr: 0x01FF, value: 4 },
+                { event: 'writeData', addr: 0x01FE, value: 2 },
+                { event: 'writeData', addr: 0x01FD, value: 32 },
+                { event: 'readData', addr: 0xFFFE, value: 52 },
+                { event: 'readData', addr: 0xFFFF, value: 18 },
+                { event: 'readData', addr: 0x1234, value: 11 }
             ]
         );
     }
@@ -189,6 +203,13 @@ class My6502Internals {
         runner.on("nmi", (currentPc: number) => {
             events.push({"event": "nmi", currentPc: currentPc});
         });
+        runner.on("writeData", (context: string, addr: number, value: number) => {
+            events.push({"event": "writeData", "addr": addr, "value": value});
+        });
+        runner.on("readData", (context: string, addr: number, value: number) => {
+            events.push({"event": "readData", "addr": addr, "value": value});
+        });
+
         runner.setBusOperations(this.busOps);
 
         // perform reset
@@ -236,7 +257,14 @@ class My6502Internals {
             ]);
         assert.deepEqual(events, 
             [
-                {"event": "nmi", "currentPc": 0x0401},
+                { event: 'readData', addr: 0x0400, value: 234 },
+                { event: 'nmi', currentPc: 0x0401 },
+                { event: 'writeData', addr: 0x01FF, value: 4 },
+                { event: 'writeData', addr: 0x01FE, value: 1 },
+                { event: 'writeData', addr: 0x01FD, value: 36 },
+                { event: 'readData', addr: 0xFFFA, value: 52 },
+                { event: 'readData', addr: 0xFFFB, value: 18 },
+                { event: 'readData', addr: 0x1234, value: 11 }
             ]
         );
     }
