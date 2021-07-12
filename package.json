@@ -8,6 +8,7 @@
     "test": "nyc --reporter=html ./node_modules/.bin/_mocha --config mocharc.json 'test/**/*.unit.test.ts'",
     "myfirst": "nodemon examples/myfirst.ts",
     "helloworld": "nodemon examples/helloworld.ts",
+    "lcm32": "nodemon examples/lcm32.ts",
     "build": "tsc --project ./"
   },
   "keywords": [],
