@@ -103,4 +103,5 @@ dist
 # TernJS port file
 .tern-port
 6502_functional_test.bin
+lcm32.bin
 build/

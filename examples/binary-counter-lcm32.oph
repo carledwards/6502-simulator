@@ -1,0 +1,54 @@
+;
+; to build this file, download the Ophis: https://michaelcmartin.github.io/Ophis/
+; with the ophis binary in your path, execute the following line from the root of
+; this project:
+;
+;       ophis example/binary-counter-lcm32.oph
+;
+; then to simulate this:
+;
+;       yarn lcm32
+;
+
+.org  $E000
+.outfile "lcm32.bin"
+
+.alias DIRA         $6003
+.alias PORTA        $6001
+
+; on real hardware running at 1Mhz, use $FF
+.alias COUNTER_HI   $01
+; on real hardware running at 1Mhz, use $FF
+.alias COUNTER_LO   $0A
+
+start:
+	lda #$FF
+	sta DIRA            ; all outputs
+    lda #$FF
+    sta PORTA           ; turn all LEDs off (they are ON when driven LOW)
+top:
+	jsr delay
+	dec PORTA
+	jmp top
+
+delay:
+    ldy #COUNTER_HI
+topx_loop:
+    ldx #COUNTER_LO
+decx_loop:
+    dex 
+    bne decx_loop
+    dey
+    bne topx_loop
+	rts
+
+
+.advance $F000          ; in case there is an interrupt
+	rti
+
+.advance $FFFA
+.word $F000             ; NMI
+.word $E000             ; RESET
+.word $F000             ; IRQ
+
+.advance $10000         ; end of ROM
