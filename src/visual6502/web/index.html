@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+    <head>
+        <title>Visual 6502 in JavaScript</title>
+
+        <!-- by default, index.html will run in kiosk mode -->
+        <style type="text/css">@import "kiosk.css";</style>
+        <script src="segdefs.js"></script>
+        <script src="transdefs.js"></script>
+        <script src="nodenames.js"></script>
+        <script src="kioskWires.js"></script>
+        <script src="wires.js"></script>
+        <script src="chipsim.js"></script>
+        <script src="macros.js"></script>
+        <script src="testprogram.js"></script>
+
+        <script type="text/javascript">
+        function handleOnload() {
+            setTimeout(function(){ 
+                setup();
+                setTimeout(function() {runChip();}, 100);
+            }, 200);
+        }
+        </script>
+    </head>
+
+    <body onload="handleOnload();">
+        <div class="frame" id="frame">
+            <div class="chip" id="chip">
+                <canvas class="chip" id="chipbg"></canvas>
+                <canvas class="chip" id="overlay"></canvas>
+                <canvas class="chip" id="hilite"></canvas>
+                <canvas class="chip" id="hitbuffer"></canvas>
+            </div>
+        </div>
+    </body>
+</html>
