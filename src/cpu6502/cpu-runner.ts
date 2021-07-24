@@ -110,11 +110,11 @@ export class CpuRunner extends Opcodes implements Cpu {
 
             // check for interrupts.  NMI is always first, then the IRQ
             if (this.busOperations) {
-                if (this.busOperations.isNmi()) {
+                if (this.busOperations.isNMI()) {
                     this.onNMI();
                     return;
                 }
-                else if (this.busOperations.isIrq()) {
+                else if (this.busOperations.isIRQ()) {
                     // IRQ's might be disabled.  If they are, it is just ignored and passes down
                     // to getting the next normal opcode
                     if (this.onIRQ()) {

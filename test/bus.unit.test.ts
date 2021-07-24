@@ -79,16 +79,52 @@ class MyTestComponent extends Component {
 
     @test 'nmi and irq'() {
         let bus = new Bus(new MyCpu());
-        assert.equal(bus.isIrq(), false);
-        assert.equal(bus.isNmi(), false);
+        assert.equal(bus.isIRQ(), false);
+        assert.equal(bus.isNMI(), false);
 
-        bus.Irq();
-        assert.equal(bus.isIrq(), true);
-        assert.equal(bus.isIrq(), false);
+        const componentOne = new MyTestComponent(2);
+        const componentTwo = new MyTestComponent(2);
 
-        bus.Nmi();
-        assert.equal(bus.isNmi(), true);
-        assert.equal(bus.isNmi(), false);
+        // IRQ simple set and remove
+        bus.setIRQ(componentOne);
+        assert.equal(bus.isIRQ(), true);
+        bus.removeIRQ(componentOne);
+        assert.equal(bus.isIRQ(), false);
+
+        // NMI simple set and read, first read trips it back
+        bus.setNMI(componentOne);
+        assert.equal(bus.isNMI(), true);
+        assert.equal(bus.isNMI(), false);
+
+        // IRQ add and remove twice
+        bus.setIRQ(componentOne);
+        bus.setIRQ(componentOne);
+        assert.equal(bus.isIRQ(), true);
+        bus.removeIRQ(componentOne);
+        assert.equal(bus.isIRQ(), false);
+        bus.removeIRQ(componentOne);
+        assert.equal(bus.isIRQ(), false);
+
+        // NMI add same component twice, first read trips
+        bus.setNMI(componentOne);
+        bus.setNMI(componentOne);
+        assert.equal(bus.isNMI(), true);
+        assert.equal(bus.isNMI(), false);
+
+        // IRQ add and remove two components
+        bus.setIRQ(componentOne);
+        bus.setIRQ(componentTwo);
+        assert.equal(bus.isIRQ(), true);
+        bus.removeIRQ(componentOne);
+        assert.equal(bus.isIRQ(), true);
+        bus.removeIRQ(componentTwo);
+        assert.equal(bus.isIRQ(), false);
+        
+        // NMI add triggered by two components first read trips it back
+        bus.setNMI(componentOne);
+        bus.setNMI(componentTwo);
+        assert.equal(bus.isNMI(), true);
+        assert.equal(bus.isNMI(), false);
     }
 
     @test 'onReadData dispatched to proper component'() {

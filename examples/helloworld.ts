@@ -88,6 +88,10 @@ rom.program[0x1FFD] = 0xE0;
 // IRQ Code
 let irq_code = [
     0xEE, 0x01, 0xB0,   // inc $B001 - increment PORTA value
+    0x48,               // pha
+    0xA9, 0x00,         // lda #$00
+    0x8D, 0x02, 0xA0,   // sta $A002 - reset IRQ counter and remove it from the bus
+    0x68,               // pla
     0x40                // rti
 ];
 
@@ -102,6 +106,10 @@ rom.program[0x1FFF] = 0xF1;
 // NMI Code
 let nmi_code = [
     0xEE, 0x00, 0xB0,   // inc $B000 - increment PORTB value
+    0x48,               // pha
+    0xA9, 0x00,         // lda #$00
+    0x8D, 0x03, 0xA0,   // sta $A003 - reset NMI counter
+    0x68,               // pla
     0x40                // rti
 ];
 

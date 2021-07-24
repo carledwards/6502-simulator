@@ -5,13 +5,14 @@ import { P2ClockListener } from "./p2-clock-listener";
 import { Cpu } from "./cpu";
 import { BusCpuAction } from "./bus-cpu-action";
 import { BusComponentAction } from "./bus-component-action";
+import { Component } from "./component";
 
 export class Bus implements P2ClockListener, BusCpuAction, BusComponentAction {
     interruptListener: InterruptListener;
     resetListener: ResetListener;
     componentManager: ComponentManager;
-    irq = false;
-    nmi = false;
+    irq: Component[] = [];
+    nmi: Component[] = [];
 
     constructor(theCpu: Cpu) {
         this.componentManager = new ComponentManager(this);
@@ -21,26 +22,36 @@ export class Bus implements P2ClockListener, BusCpuAction, BusComponentAction {
         theCpu.setBusOperations(this);
     }
 
-    isNmi(): boolean {
-        let val = this.nmi;
-        this.nmi = false;
+    isNMI(): boolean {
+        const val = this.nmi.length > 0;
+        this.nmi = []; // reading will reset the NMI
         return val;
     }
 
-    isIrq(): boolean {
-        let val = this.irq;
-        this.irq = false;
+    isIRQ(): boolean {
+        const val = this.irq.length > 0
         return val;
     }
 
-    Irq(): void {
-        this.irq = true;
+    setIRQ(component: Component): void {
+        if (!this.irq.includes(component)) {
+            this.irq.push(component);
+        }
     }
 
-    Nmi(): void {
-        this.nmi = true;
+    setNMI(component: Component): void {
+        if (!this.nmi.includes(component)) {
+            this.nmi.push(component);
+        }
     }
-    
+
+    removeIRQ(component: Component): void {
+        const index = this.irq.indexOf(component);
+        if (index >= 0) {
+            this.irq = this.irq.filter(item => item !== component);
+        }
+    }
+
     writeData(addr: number, data: number): void {
         this.componentManager.writeData(addr, data);
     }

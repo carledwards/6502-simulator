@@ -16,13 +16,13 @@ class MyBusOperations implements BusCpuAction {
     nmi = false;
     irq = false;
 
-    isNmi(): boolean {
+    isNMI(): boolean {
         let val = this.nmi;
         this.nmi = false;
         return val;
     }
 
-    isIrq(): boolean {
+    isIRQ(): boolean {
         let val = this.irq;
         this.irq = false;
         return val;
