@@ -69,8 +69,6 @@ function setup(){
 	setupHitBuffer();
 	refresh();
 	initChip();
-	// document.getElementById('stop').style.visibility = 'hidden';
-	setTimeout(go, 0);
 }
 
 

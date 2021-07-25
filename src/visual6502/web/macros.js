@@ -49,10 +49,7 @@ async function go(){
 	}
 	if(running && !instep) {
 		instep = true;
-		// console.log(`start step: ${(readBits('pch', 8)<<8) + readBits('pcl', 8)}`);
 		await step();
-		// console.log("ending step");
-		setTimeout(go, 50); // schedule the next poll
 		instep = false;
     }
 }

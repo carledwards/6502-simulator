@@ -2,12 +2,14 @@
 var express = require('express');
 var app = express();
 var server = require('http').createServer(app);
+const io = require("socket.io")(server);
 var path = require('path');
 
 import { CpuRunner } from "./cpu-runner";
-import { Motherboard } from './motherboard';
+import { Motherboard } from '../motherboard';
 import { Ram } from "../components/ram";
 import { Rom } from "../components/rom";
+import { cpuUsage } from "process";
 
 
 /**
@@ -15,8 +17,14 @@ import { Rom } from "../components/rom";
  */
 let runner = new CpuRunner();
 
+io.on("connection", function(client: any) {
+    console.log("connection");
+    runner.setSocketClient(client);
+});
+
 let motherboard = new Motherboard(
-  runner
+  runner,
+  50
 );
 
 motherboard.getComponentManager().add(
@@ -28,8 +36,9 @@ let rom = new Rom(0x2000);
 let code = [
     0xa9, 0xff,         // lda #$ff
     0x8d, 0x00, 0x03,   // sta $300
+    0xee, 0x00, 0x03,
     0x4c, 0x00, 0xE0,   // jmp $E000
-];  
+];
 for (var i = 0; i < code.length; i++) {
     rom.program[i] = code[i];
 }
@@ -38,8 +47,6 @@ rom.program[0x1FFC] = 0x00;
 rom.program[0x1FFD] = 0xE0;
 
 motherboard.getComponentManager().add(0xE000, rom);
-
-motherboard.reset();
 
 /**
  * Web server setup
@@ -71,4 +78,9 @@ app.get('/cpu/data/read/:addr', function(req: any, res: any) {
 
 server.listen(3000, () => {
     console.log('server is listening on port 3000');
+
+    // reset the motherboard and start it up
+    runner.onReset();
+    motherboard.reset();
+    motherboard.resume();
 });

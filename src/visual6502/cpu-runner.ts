@@ -2,16 +2,26 @@ import { BusCpuAction } from "../bus-cpu-action";
 import { Cpu } from "../cpu";
 import { P2ClockListener } from "../p2-clock-listener";
 
+
 export class CpuRunner implements Cpu {
     busOperations?: BusCpuAction;
     p2ClockListener?: P2ClockListener;
+    socketClient: any;
+
+    setSocketClient(theClient: any) {
+        this.socketClient = theClient;
+    }
 
     onReset(): void {
-        // TODO - send to browser
+        if (this.socketClient) {
+            this.socketClient.emit("reset", "");
+        }
     }
 
     onClockTick(): void {
-        // ignore
+        if (this.socketClient) {
+            this.socketClient.emit("clockTick", "");
+        }
     }
 
     setP2ClockListener(cb: P2ClockListener): void {

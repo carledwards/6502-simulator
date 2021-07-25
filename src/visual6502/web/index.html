@@ -2,12 +2,7 @@
     <head>
         <title>Visual 6502 in JavaScript</title>
 
-        <!-- <script src="/socket.io/socket.io.js"></script>
-        <script>
-            var socket = io();
-        </script> -->
-
-        <!-- by default, index.html will run in kiosk mode -->
+        <script src="/socket.io/socket.io.js"></script>
         <style type="text/css">@import "kiosk.css";</style>
         <script src="segdefs.js"></script>
         <script src="transdefs.js"></script>
@@ -18,12 +13,30 @@
         <script src="macros.js"></script>
 
         <script type="text/javascript">
+        var hasBeenSetup = false
         function handleOnload() {
-            setTimeout(function(){ 
-                setup();
-                setTimeout(function() {runChip();}, 100);
-            }, 200);
+            setup();
+            hasBeenSetup = true;
         }
+
+        var socket = io.connect();
+        socket.on('connect', function(data) {
+            // console.log("socket connected to server");
+        });
+        socket.on('reset', function(data) {
+            console.log("reset");
+            if (hasBeenSetup) {
+                hasBeenSetup = false;
+                initChip();
+                hasBeenSetup = true;
+            }
+        });
+        socket.on("clockTick", (msg) => {
+            if (hasBeenSetup) {
+                runChip();
+            }
+        });
+        
         </script>
     </head>
 
