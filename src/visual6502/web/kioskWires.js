@@ -20,10 +20,6 @@
  THE SOFTWARE.
 */
 
-var centerx=300, centery=300;
-var zoom=1;
-var dragMouseX, dragMouseY, moved;
-var statbox;
 var animateChipLayout = true;
 var userCode=[];
 var userResetLow;
@@ -43,7 +39,6 @@ var userResetHigh;
 //   the point of drawing line segments
 // if the canvas is any smaller than chip coordinates there will be
 //   rounding artifacts, and at high zoom there will be anti-aliasing on edges.
-var grMaxZoom=12;
 var grChipSize=10000;
 var grChipOffsetX=400;
 var grChipOffsetY=0;
@@ -64,14 +59,7 @@ var drawlayers = [true, true, true, true, true, true];
 
 // try to present a meaningful page before starting expensive work
 function setup(){
-	statbox = document.getElementById('status');
-	setStatus('loading 6502...');
-	setTimeout(setup_part2, 0);
-}
-
-function setup_part2(){
 	frame = document.getElementById('frame');
-	statbox = document.getElementById('status');
 	setupNodes();
 	setupTransistors();
 	setupLayerVisibility();
@@ -79,112 +67,12 @@ function setup_part2(){
 	setupOverlay();
 	setupHilite();
 	setupHitBuffer();
-	recenter();
 	refresh();
-	// setupTable();
-	window.onkeypress = function(e){handleKey(e);}
-	hilite.onmousedown = function(e){mouseDown(e);}
-	setStatus('resetting 6502...');
-	setTimeout(setup_part3, 0);
-}
-
-function setup_part3(){
-	loadProgram();
-	writeTriggers={};  // kiosk mode does not handle I/O
 	initChip();
 	// document.getElementById('stop').style.visibility = 'hidden';
-	go();
+	setTimeout(go, 0);
 }
 
-
-/////////////////////////
-//
-// User Interface
-//
-/////////////////////////
-
-function handleKey(e){
-	var c = e.charCode || e.keyCode;
-	c = String.fromCharCode(c);
-	if('zx<>?np'.indexOf(c)==-1) return;
-	if((c=='x' || c=='<') && zoom>1) setZoom(zoom/1.2);
-	else if((c=='z' || c=='>') && zoom<grMaxZoom) setZoom(zoom*1.2);
-	else if(c=='?') setZoom(1);
-	else if(c=='n') stepForward();
-	else if(c=='p') stepBack();
-}
-
-function mouseDown(e){
-	e.preventDefault();
-	moved=false;	
-	dragMouseX = e.clientX;	
-	dragMouseY = e.clientY;
-	window.onmousemove = function(e){mouseMove(e)};
-	window.onmouseup = function(e){mouseUp(e)};
-}
-
-function mouseMove(e){
-	moved = true;
-	if(zoom==1) return;
-	var dx = e.clientX-dragMouseX;
-	var dy = e.clientY-dragMouseY;
-	dragMouseX = e.clientX;
-	dragMouseY = e.clientY;
-	centerx-=dx/zoom;
-	centerx = Math.max(centerx, 400/zoom);
-	centerx = Math.min(centerx, 600-400/zoom);
-	centery-=dy/zoom;
-	centery = Math.max(centery, 300/zoom);
-	centery = Math.min(centery, 600-300/zoom);
-	recenter();
-}
-
-function mouseUp(e){
-	if(!moved) handleClick(e);	
-	window.onmousemove = undefined;
-	window.onmouseup = undefined;
-}
-
-function setZoom(n){
-	zoom = n;
-	setChipStyle({
-		width: 600*n+'px',
-		height: 600*n+'px'
-	});
-	recenter();
-}
-
-function recenter(){
-	// var top = -centery*zoom+300;
-	// top = Math.min(top, 0);
-	// top = Math.max(top, -600*(zoom-1));
-	// var left = -centerx*zoom+400;
-	// left = Math.min(left, 0);
-	// left = Math.max(left, (zoom==1)?100:-600*zoom+600);
-	// setChipStyle({
-	// 	top: top+'px',
-	// 	left: left+'px',
-	// });
-}
-
-function handleClick(e){
-	var x = localx(hilite, e.clientX)/zoom;
-	var y = localy(hilite, e.clientY)/zoom;
-	var w = findNodeNumber(x,y);
-	if(e.shiftKey) {
-		getNodeGroup(w);
-		hiliteNode(group);
-	}
-	else {var a=new Array(); a.push(w); hiliteNode(a);}
-        var cx = Math.round(x*grChipSize/600);
-        var cy = Math.round(y*grChipSize/600);
-	if(w==-1) setStatus('x:',cx,'<br>','y:',cy);
-	else {
-		var s1='x: ' + cx + ' y: ' + cy;
-                var s2='node: ' + w + ' ' + nodeName(w);
-                setStatus(s1, s2);
-	}
-}
 
 /////////////////////////
 //

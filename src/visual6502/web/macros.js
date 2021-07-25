@@ -20,14 +20,14 @@
  THE SOFTWARE.
 */
 
-var memory = Array();
 var cycle = 0;
-var trace = Array();
 var logstream = Array();
 var running = false;
+var instep = false;
 var logThese=[];
 var chipname='6502';
 var nodenamereset='res';
+
 var presetLogLists=[
 		['cycle'],
 		['ab','db','rw','Fetch','pc','a','x','y','s','p'],
@@ -40,104 +40,43 @@ var presetLogLists=[
 		['irq','nmi',nodenamereset],
 	];
 
-function loadProgram(){
-	// a moderate size of static testprogram might be loaded
-	if(testprogram.length!=0 && testprogramAddress != undefined)
-		for(var i=0;testprogram[i]!=undefined;i++){
-			var a=testprogramAddress+i;
-			mWrite(a, testprogram[i]);
-			// if(a<0x200)
-			// 	setCellValue(a, testprogram[i]);
-		}
-	// a small test program or patch might be passed in the URL
-	if(userCode.length!=0)
-		for(var i=0;i<userCode.length;i++){
-			if(userCode[i] != undefined){
-				mWrite(i, userCode[i]);
-				// if(i<0x200)
-				// 	setCellValue(i, userCode[i]);
-			}
-		}
-	// default reset vector will be 0x0000 because undefined memory reads as zero
-	if(userResetLow!=undefined)
-		mWrite(0xfffc, userResetLow);
-	if(userResetHigh!=undefined)
-		mWrite(0xfffd, userResetHigh);
-}
-
-function go(){
+async function go(){
 	if(typeof userSteps != "undefined"){
 		if(--userSteps==0){
 			running=false;
 			userSteps=undefined;
 		}
 	}
-	if(running) {
-           step();
-	   setTimeout(go, 0); // schedule the next poll
-        }
+	if(running && !instep) {
+		instep = true;
+		// console.log(`start step: ${(readBits('pch', 8)<<8) + readBits('pcl', 8)}`);
+		await step();
+		// console.log("ending step");
+		setTimeout(go, 50); // schedule the next poll
+		instep = false;
+    }
 }
 
-function goUntilSync(){
-	halfStep();
+async function goUntilSync(){
+	await halfStep();
 	while(!isNodeHigh(nodenames['sync']) || isNodeHigh(nodenames['clk0']))
-		halfStep();
+		await halfStep();
 }
 
-function goUntilSyncOrWrite(){
-	halfStep();
+async function goUntilSyncOrWrite(){
+	await halfStep();
 	cycle++;
 	while(
 		!isNodeHigh(nodenames['clk0']) ||
 		( !isNodeHigh(nodenames['sync']) && isNodeHigh(nodenames['rw']) )
 	) {
-		halfStep();
+		await halfStep();
 		cycle++;
 	}
 	chipStatus();
 }
 
-function testNMI(n){
-        initChip();
-
-        mWrite(0x0000, 0x38); // set carry
-        mWrite(0x0001, 0x4c); // jump to test code
-        mWrite(0x0002, 0x06);
-        mWrite(0x0003, 0x23);
-
-        mWrite(0x22ff, 0x38); // set carry
-        mWrite(0x2300, 0xea);
-        mWrite(0x2301, 0xea);
-        mWrite(0x2302, 0xea);
-        mWrite(0x2303, 0xea);
-        mWrite(0x2304, 0xb0); // branch carry set to self
-        mWrite(0x2305, 0xfe);
-
-        mWrite(0x2306, 0xb0); // branch carry set to self
-        mWrite(0x2307, 0x01);
-        mWrite(0x2308, 0x00); // brk should be skipped
-        mWrite(0x2309, 0xa9); // anything
-        mWrite(0x230a, 0xde); // anything
-        mWrite(0x230b, 0xb0); // branch back with page crossing
-        mWrite(0x230c, 0xf2);
-
-        mWrite(0xc018, 0x40); // nmi handler
-
-        mWrite(0xfffa, 0x18); // nmi vector
-        mWrite(0xfffb, 0xc0);
-        mWrite(0xfffc, 0x00); // reset vector
-        mWrite(0xfffd, 0x00);
-
-        for(var i=0;i<n;i++){step();}
-        setLow('nmi');
-        chipStatus();
-        for(var i=0;i<8;i++){step();}
-        setHigh('nmi');
-        chipStatus();
-        for(var i=0;i<16;i++){step();}
-}
-
-function initChip(){
+async function initChip(){
         var start = now();
 	for(var nn in nodes) {
 		nodes[nn].state = false;
@@ -156,10 +95,9 @@ function initChip(){
 	recalcNodeList(allNodes()); 
 	for(var i=0;i<8;i++){setHigh('clk0'), setLow('clk0');}
 	setHigh(nodenamereset);
-	for(var i=0;i<18;i++){halfStep();} // avoid updating graphics and trace buffer before user code
+	for(var i=0;i<18;i++){await halfStep();} // avoid updating graphics and trace buffer before user code
 	refresh();
 	cycle = 0;
-	trace = Array();
 	if(typeof expertMode != "undefined")
 		updateLogList();
 	chipStatus();
@@ -194,63 +132,36 @@ function updateLogList(names){
 	initLogbox(logThese);
 }
 
-var traceChecksum='';
-var goldenChecksum;
-
-// simulate a single clock phase, updating trace and highlighting layout
-function step(){
+// simulate a single clock phase
+async function step(){
 	var s=stateString();
-	var m=getMem();
-	trace[cycle]= {chip: s, mem: m};
-	if(goldenChecksum != undefined)
-		traceChecksum=adler32(traceChecksum+s+m.slice(0,511).toString(16));
-	halfStep();
+	await halfStep();
 	if(animateChipLayout)
 		refresh();
 	cycle++;
 	chipStatus();
 }
 
-// triggers for breakpoints, watchpoints, input pin events
-// almost always are undefined when tested, so minimal impact on performance
-clockTriggers={};
-writeTriggers={};
-readTriggers={};
-fetchTriggers={};
-
-// example instruction tracing triggers
-// fetchTriggers[0x20]="console.log('0x'+readAddressBus().toString(16)+': JSR');";
-// fetchTriggers[0x60]="console.log('0x'+readAddressBus().toString(16)+': RTS');";
-// fetchTriggers[0x4c]="console.log('0x'+readAddressBus().toString(16)+': JMP');";
-
 // simulate a single clock phase with no update to graphics or trace
-function halfStep(){
+async function halfStep(){
 	var clk = isNodeHigh(nodenames['clk0']);
-	if (clk) {setLow('clk0'); handleBusRead(); } 
-	else {setHigh('clk0'); handleBusWrite();}
-	eval(clockTriggers[cycle+1]);  // pre-apply next tick's inputs now, so the updates are displayed
-
+	if (clk) {setLow('clk0'); await handleBusRead(); } 
+	else {setHigh('clk0'); await handleBusWrite();}
 }
 
-function handleBusRead(){
+async function handleBusRead(){
 	if(isNodeHigh(nodenames['rw'])){
 		var a = readAddressBus();
-		var d = eval(readTriggers[a]);
-		if(d == undefined)
-			d = mRead(readAddressBus());
-		if(isNodeHigh(nodenames['sync']))
-			eval(fetchTriggers[d]);
+		d = await mRead(readAddressBus());
 		writeDataBus(d);
 	}
 }
 
-function handleBusWrite(){
+async function handleBusWrite(){
 	if(!isNodeHigh(nodenames['rw'])){
 		var a = readAddressBus();
 		var d = readDataBus();
-		eval(writeTriggers[a]);
-		mWrite(a,d);
-		// if(a<0x200) setCellValue(a,d);
+		await mWrite(a,d);
 	}
 }
 
@@ -460,12 +371,22 @@ function writeDataBus(x){
 	recalcNodeList(recalcs);
 }
 
-function mRead(a){
-	if(memory[a]==undefined) return 0;
-	else return memory[a];
+async function mRead(a){
+	var data = 0;
+	const response = await fetch(`/cpu/data/read/${a}`);
+	await response.json().then(function(json) {
+		data = json.data;
+	});
+
+	return data;
 }
 
-function mWrite(a, d){memory[a]=d;}
+async function mWrite(a, d){
+	const response = await fetch(`/cpu/data/write/${a}/${d}`);
+	await response.json().then(function(json) {
+		// ignore
+	});
+}
 
 function clkNodes(){
 	var res = Array();
@@ -478,22 +399,15 @@ function clkNodes(){
 	hiliteNode(res);
 }
 
-function runChip(){
-	// var start = document.getElementById('start');
-	// var stop = document.getElementById('stop');
-	// start.style.visibility = 'hidden';
-	// stop.style.visibility = 'visible';
-	if(typeof running == "undefined")
-		initChip();
+async function runChip(){
+	if(typeof running == "undefined") {
+		await initChip();
+	}
 	running = true;
-        go();
+	await go();
 }
 
 function stopChip(){
-	// var start = document.getElementById('start');
-	// var stop = document.getElementById('stop');
-	// start.style.visibility = 'visible';
-	// stop.style.visibility = 'hidden';
 	running = false;
 }
 
@@ -502,90 +416,35 @@ function resetChip(){
 	setTimeout(initChip,0);
 }
 
-function stepForward(){
-	if(typeof running == "undefined")
-		initChip();
-	stopChip();
-	step();
-}
-
-function stepBack(){
-	if(cycle==0) return;
-	showState(trace[--cycle].chip);
-	setMem(trace[cycle].mem);
-	var clk = isNodeHigh(nodenames['clk0']);
-	if(!clk) writeDataBus(mRead(readAddressBus()));
-	chipStatus();
-}
-
 function chipStatus(){
-	var ab = readAddressBus();
-	var machine1 =
-	        ' halfcyc:' + cycle +
-	        ' phi0:' + readBit('clk0') +
-                ' AB:' + hexWord(ab) +
-	        ' D:' + hexByte(readDataBus()) +
-	        ' RnW:' + readBit('rw');
-	var machine2 =
-	        ' PC:' + hexWord(readPC()) +
-	        ' A:' + hexByte(readA()) +
-	        ' X:' + hexByte(readX()) +
-	        ' Y:' + hexByte(readY()) +
-	        ' SP:' + hexByte(readSP()) +
-	        ' ' + readPstring();
-	var machine3 = 
-		'Hz: ' + estimatedHz().toFixed(1);
-	if(typeof expertMode != "undefined") {
-		machine3 += ' Exec: ' + busToString('Execute') + '(' + busToString('State') + ')';
-		if(isNodeHigh(nodenames['sync']))
-			machine3 += ' (Fetch: ' + busToString('Fetch') + ')';
-		if(goldenChecksum != undefined)
-			machine3 += " Chk:" + traceChecksum + ((traceChecksum==goldenChecksum)?" OK":" no match");
-	}
-	setStatus(machine1, machine2, machine3);
-	if (logThese.length>1) {
-		updateLogbox(logThese);
-	}
+	// var ab = readAddressBus();
+	// var machine1 =
+	//         ' halfcyc:' + cycle +
+	//         ' phi0:' + readBit('clk0') +
+    //             ' AB:' + hexWord(ab) +
+	//         ' D:' + hexByte(readDataBus()) +
+	//         ' RnW:' + readBit('rw');
+	// var machine2 =
+	//         ' PC:' + hexWord(readPC()) +
+	//         ' A:' + hexByte(readA()) +
+	//         ' X:' + hexByte(readX()) +
+	//         ' Y:' + hexByte(readY()) +
+	//         ' SP:' + hexByte(readSP()) +
+	//         ' ' + readPstring();
+	// var machine3 = 
+	// 	'Hz: ' + estimatedHz().toFixed(1);
+	// if(typeof expertMode != "undefined") {
+	// 	machine3 += ' Exec: ' + busToString('Execute') + '(' + busToString('State') + ')';
+	// 	if(isNodeHigh(nodenames['sync']))
+	// 		machine3 += ' (Fetch: ' + busToString('Fetch') + ')';
+	// }
+	// setStatus(machine1, machine2, machine3);
+	// if (logThese.length>1) {
+	// 	updateLogbox(logThese);
+	// }
 	// selectCell(ab);
 }
 
-// run for an extended number of cycles, with low overhead, for interactive programs or for benchmarking
-//    note: to run an interactive program, use an URL like
-//    http://visual6502.org/JSSim/expert.html?graphics=f&loglevel=-1&headlesssteps=-500
-function goFor(){
-	var n = headlessSteps;  //  a negative value is a request to free-run
-	if(headlessSteps<0)
-		n=-n;
-	var start = document.getElementById('start');
-	var stop = document.getElementById('stop');
-	start.style.visibility = 'hidden';
-	stop.style.visibility = 'visible';
-	if(typeof running == "undefined") {
-		initChip();
-	}
-	running = true;
-	setTimeout("instantaneousHz(); goForN("+n+")",0);
-}
-
-// helper function: allows us to poll 'running' without resetting it when we're re-scheduled
-function goForN(n){
-	var n2=n;  // save our parameter so we can re-submit ourselves
-	while(n--){
-		halfStep();
-		cycle++;
-	}
-	instantaneousHz();
-	chipStatus();
-	if((headlessSteps<0) && running){
-		setTimeout("goForN("+n2+")",0); // re-submit ourselves if we are meant to free-run
-		return;
-	}
-	running = false;
-	var start = document.getElementById('start');
-	var stop = document.getElementById('stop');
-	start.style.visibility = 'visible';
-	stop.style.visibility = 'hidden';
-}
 
 var prevHzTimeStamp=0;
 var prevHzCycleCount=0;
@@ -673,19 +532,6 @@ function updateLogbox(names){
 		logStream.splice(1,0,row);
 
 	logbox.innerHTML = logStream.join("");
-}
-
-function getMem(){
-	var res = Array();
-	for(var i=0;i<0x200;i++) res.push(mRead(i));
-	return res;
-}
-
-function setMem(arr){
-	for(var i=0;i<0x200;i++){
-		mWrite(i, arr[i]); 
-		// setCellValue(i, arr[i]);
-	}
 }
 
 function hexWord(n){return (0x10000+n).toString(16).substring(1)}
