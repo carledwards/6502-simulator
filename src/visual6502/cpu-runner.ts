@@ -20,7 +20,10 @@ export class CpuRunner implements Cpu {
 
     onClockTick(): void {
         if (this.socketClient) {
-            this.socketClient.emit("clockTick", "");
+            this.socketClient.emit("clockTick", {
+                "isIRQ": this.busOperations!.isIRQ(),
+                "isNMI": this.busOperations!.isNMI()
+            });
         }
     }
 
@@ -34,10 +37,8 @@ export class CpuRunner implements Cpu {
     }
 
     onNMI(value: boolean): void {
-        // TODO - send to browser
     }
 
     onIRQ(value: boolean): void {
-        // TODO - send to browser
     }
 }

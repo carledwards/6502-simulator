@@ -20,7 +20,6 @@
  THE SOFTWARE.
 */
 
-var ctrace = false;
 var traceTheseNodes = [];
 var traceTheseTransistors = [];
 var loglevel = 0;
@@ -34,23 +33,11 @@ function recalcNodeList(list){
 	recalcHash = new Array();
 	for(var j=0;j<100;j++){		// loop limiter
 		if(list.length==0) return;
-		if(ctrace) {
-			var i;
-			for(i=0;i<traceTheseNodes.length;i++) {
-				if(list.indexOf(traceTheseNodes[i])!=-1) break;
-			}
-			if((traceTheseNodes.length==0)||(list.indexOf(traceTheseNodes[i])==-1)) {
-				console.log('recalcNodeList iteration: ', j, list.length, 'nodes');
-			} else {
-				console.log('recalcNodeList iteration: ', j, list.length, 'nodes', list);
-			}
-		}
 		list.forEach(recalcNode);
 		list = recalclist;
 		recalclist = new Array();
 		recalcHash = new Array();
 	}
-	if(ctrace) console.log(n,'looping...');
 }
 
 function recalcNode(node){
@@ -58,8 +45,6 @@ function recalcNode(node){
 	if(node==npwr) return;
 	getNodeGroup(node);
 	var newState = getNodeValue();
-	if(ctrace && (traceTheseNodes.indexOf(node)!=-1))
-		console.log('recalc', node, group);
 	group.forEach(function(i){
 		var n = nodes[i];
 		if(n.state==newState) return;
@@ -72,16 +57,12 @@ function recalcNode(node){
 
 function turnTransistorOn(t){
 	if(t.on) return;
-	if(ctrace && (traceTheseTransistors.indexOf(t.name)!=-1))
-		console.log(t.name, 'on', t.gate, t.c1, t.c2);
 	t.on = true;
 	addRecalcNode(t.c1);
 }
 
 function turnTransistorOff(t){
 	if(!t.on) return;
-	if(ctrace && (traceTheseTransistors.indexOf(t.name)!=-1))
-		console.log(t.name, 'off', t.gate, t.c1, t.c2);
 	t.on = false;
 	addRecalcNode(t.c1);
 	addRecalcNode(t.c2);

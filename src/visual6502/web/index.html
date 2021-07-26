@@ -15,8 +15,11 @@
         <script type="text/javascript">
         var hasBeenSetup = false
         function handleOnload() {
-            setup();
-            hasBeenSetup = true;
+            setTimeout(function() {
+                setup();
+                runChip();
+                hasBeenSetup = true;
+            }, 200);
         }
 
         var socket = io.connect();
@@ -28,11 +31,37 @@
             if (hasBeenSetup) {
                 hasBeenSetup = false;
                 initChip();
+                runChip();
                 hasBeenSetup = true;
             }
         });
+
+        var remainingNMIClockTicks = 0;
         socket.on("clockTick", (msg) => {
+            console.log(`clockTick: ${JSON.stringify(msg)}`);
             if (hasBeenSetup) {
+                if (msg.isNMI) {
+                    setLow('nmi');
+                    remainingNMIClockTicks = 8;
+                }
+                else {
+                    // NMI's should be a pulse (not something held down)
+                    // this code will only set the internal NMI to "high" 
+                    // once we have executed ~8 clock ticks.  This gives
+                    // the NMI enough time to be seen by the CPU.
+                    if (remainingNMIClockTicks > 0) {
+                        remainingNMIClockTicks--;
+                    }
+                    else {
+                        setHigh('nmi');
+                    }
+                }
+                if (msg.isIRQ) {
+                    setLow('irq');
+                }
+                else {
+                    setHigh('irq');
+                }
                 runChip();
             }
         });

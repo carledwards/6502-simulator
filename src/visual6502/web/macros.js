@@ -98,7 +98,6 @@ async function initChip(){
 	if(typeof expertMode != "undefined")
 		updateLogList();
 	chipStatus();
-	if(ctrace)console.log('initChip done after', now()-start);
 }
 
 function signalSet(n){
