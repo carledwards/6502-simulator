@@ -21,7 +21,7 @@
 */
 
 var animateChipLayout = true;
-var userCode=[];
+var userCode = [];
 var userResetLow;
 var userResetHigh;
 
@@ -39,18 +39,18 @@ var userResetHigh;
 //   the point of drawing line segments
 // if the canvas is any smaller than chip coordinates there will be
 //   rounding artifacts, and at high zoom there will be anti-aliasing on edges.
-var grChipSize=10000;
-var grChipOffsetX=400;
-var grChipOffsetY=0;
-var grCanvasSize=2000;
-var grLineWidth=1;
+var grChipSize = 10000;
+var grChipOffsetX = 400;
+var grChipOffsetY = 0;
+var grCanvasSize = 2000;
+var grLineWidth = 1;
 
 // Index of layerNames corresponds to index into drawLayers
 var layernames = ['metal', 'switched diffusion', 'inputdiode', 'grounded diffusion', 'powered diffusion', 'polysilicon'];
-var colors = ['rgba(128,128,192,0.4)','#FFFF00','#FF00FF','#4DFF4D',
-              '#FF4D4D','#801AC0','rgba(128,0,255,0.75)'];
+var colors = ['rgba(128,128,192,0.4)', '#FFFF00', '#FF00FF', '#4DFF4D',
+	'#FF4D4D', '#801AC0', 'rgba(128,0,255,0.75)'];
 var drawlayers = [true, true, true, true, true, true];
-              
+
 /////////////////////////
 //
 // Drawing Setup
@@ -58,7 +58,7 @@ var drawlayers = [true, true, true, true, true, true];
 /////////////////////////
 
 // try to present a meaningful page before starting expensive work
-function setup(){
+function setup() {
 	frame = document.getElementById('frame');
 	setupNodes();
 	setupTransistors();
@@ -78,8 +78,8 @@ function setup(){
 //
 /////////////////////////
 
-function setChipStyle(props){
-	for(var i in props){
+function setChipStyle(props) {
+	for (var i in props) {
 		chipbg.style[i] = props[i];
 		overlay.style[i] = props[i];
 		hilite.style[i] = props[i];
