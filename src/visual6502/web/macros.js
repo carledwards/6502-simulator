@@ -70,7 +70,6 @@ async function goUntilSyncOrWrite() {
 		await halfStep();
 		cycle++;
 	}
-	chipStatus();
 }
 
 async function initChip() {
@@ -92,12 +91,8 @@ async function initChip() {
 	recalcNodeList(allNodes());
 	for (var i = 0; i < 8; i++) { setHigh('clk0'), setLow('clk0'); }
 	setHigh(nodenamereset);
-	for (var i = 0; i < 18; i++) { await halfStep(); } // avoid updating graphics and trace buffer before user code
 	refresh();
 	cycle = 0;
-	if (typeof expertMode != "undefined")
-		updateLogList();
-	chipStatus();
 }
 
 function signalSet(n) {
@@ -135,7 +130,6 @@ async function step() {
 	if (animateChipLayout)
 		refresh();
 	cycle++;
-	chipStatus();
 }
 
 // simulate a single clock phase with no update to graphics or trace
@@ -371,7 +365,9 @@ async function mRead(a) {
 	const response = await fetch(`/cpu/data/read/${a}`);
 	await response.json().then(function (json) {
 		data = json.data;
+		console.log(`got data from remote read: addr:${a}, data:${data}`);
 	});
+	console.log(`read - addr:${a}, data:${data}`);
 
 	return data;
 }
@@ -410,36 +406,6 @@ function resetChip() {
 	stopChip();
 	setTimeout(initChip, 0);
 }
-
-function chipStatus() {
-	// var ab = readAddressBus();
-	// var machine1 =
-	//         ' halfcyc:' + cycle +
-	//         ' phi0:' + readBit('clk0') +
-	//             ' AB:' + hexWord(ab) +
-	//         ' D:' + hexByte(readDataBus()) +
-	//         ' RnW:' + readBit('rw');
-	// var machine2 =
-	//         ' PC:' + hexWord(readPC()) +
-	//         ' A:' + hexByte(readA()) +
-	//         ' X:' + hexByte(readX()) +
-	//         ' Y:' + hexByte(readY()) +
-	//         ' SP:' + hexByte(readSP()) +
-	//         ' ' + readPstring();
-	// var machine3 = 
-	// 	'Hz: ' + estimatedHz().toFixed(1);
-	// if(typeof expertMode != "undefined") {
-	// 	machine3 += ' Exec: ' + busToString('Execute') + '(' + busToString('State') + ')';
-	// 	if(isNodeHigh(nodenames['sync']))
-	// 		machine3 += ' (Fetch: ' + busToString('Fetch') + ')';
-	// }
-	// setStatus(machine1, machine2, machine3);
-	// if (logThese.length>1) {
-	// 	updateLogbox(logThese);
-	// }
-	// selectCell(ab);
-}
-
 
 var prevHzTimeStamp = 0;
 var prevHzCycleCount = 0;

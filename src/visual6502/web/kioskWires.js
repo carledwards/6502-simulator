@@ -62,7 +62,6 @@ function setup() {
 	frame = document.getElementById('frame');
 	setupNodes();
 	setupTransistors();
-	setupLayerVisibility();
 	setupBackground();
 	setupOverlay();
 	setupHilite();

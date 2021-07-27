@@ -64,15 +64,6 @@ function setupTransistors() {
 	}
 }
 
-function setupLayerVisibility() {
-	// var x=document.getElementById('updateShow');
-	// for (var i=0;i<x.childNodes.length;i++) {
-	// 	if(x.childNodes[i].type='checkbox'){
-	// 		x.childNodes[i].checked=drawlayers[x.childNodes[i].name];
-	// 	}
-	// }
-}
-
 function setupBackground() {
 	chipbg = document.getElementById('chipbg');
 	chipbg.width = grCanvasSize;
@@ -268,17 +259,6 @@ function localx(el, gx) {
 
 function localy(el, gy) {
 	return gy - el.getBoundingClientRect().top;
-}
-
-function setStatus() {
-	// var res = '';
-	// // pad the arguments to make this a three-line display
-	// // there must be a clean way to do this
-	// if(arguments[1]==undefined)arguments[1]="";
-	// if(arguments[2]==undefined)arguments[2]="";
-	// arguments.length=3;
-	// for(var i=0;i<arguments.length;i++) res=res+arguments[i]+'<br>';
-	// statbox.innerHTML = res;
 }
 
 function setupNodeNameList() {
