@@ -365,9 +365,7 @@ async function mRead(a) {
 	const response = await fetch(`/cpu/data/read/${a}`);
 	await response.json().then(function (json) {
 		data = json.data;
-		console.log(`got data from remote read: addr:${a}, data:${data}`);
 	});
-	console.log(`read - addr:${a}, data:${data}`);
 
 	return data;
 }
