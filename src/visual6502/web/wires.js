@@ -20,7 +20,7 @@
  THE SOFTWARE.
 */
 
-var frame, chipbg, overlay, hilite, hitbuffer, ctx;
+var frame, chipbg, overlay, hilite, hitbuffer, ctx, ctxHilite;
 var nodes = new Array();
 var transistors = {};
 var nodenamelist = [];
@@ -96,7 +96,7 @@ function setupHilite() {
 	hilite = document.getElementById('hilite');
 	hilite.width = grCanvasSize;
 	hilite.height = grCanvasSize;
-	var ctx = hilite.getContext('2d');
+	ctxHilite = hilite.getContext('2d');
 }
 
 function setupHitBuffer() {
@@ -131,8 +131,34 @@ function hexdigit(n) { return '0123456789ABCDEF'.charAt(n); }
 function refresh() {
 	if (!chipLayoutIsVisible) return;
 	ctx.clearRect(0, 0, grCanvasSize, grCanvasSize);
-	for (i in nodes) {
-		if (isNodeHigh(i)) overlayNode(nodes[i].segs);
+	ctx.fillStyle = 'rgba(255,0,0,.8)';
+	for (n in nodes) {
+		if ((nodes[n].state)){
+			// overlayNode(nodes[i].segs);
+			for (i in nodes[n].segs) {
+				const seg = nodes[n].segs[i];
+		
+				var dx = grChipOffsetX;
+				var dy = grChipOffsetY;
+				const scaleFactor = grCanvasSize / grChipSize;
+				ctx.beginPath();
+				ctx.moveTo(
+					Math.round((seg[0] + dx)) * scaleFactor, 
+					Math.round((grChipSize - seg[1] + dy)) * scaleFactor);
+				for (var i = 2; i < seg.length; i += 2) {
+					ctx.lineTo(
+						Math.round((seg[i] + dx) * scaleFactor), 
+						Math.round((grChipSize - seg[i + 1] + dy)) * scaleFactor);
+				} 
+				ctx.lineTo(
+					Math.round((seg[0] + dx) * scaleFactor), 
+					Math.round((grChipSize - seg[1] + dy) * scaleFactor)
+					);
+		
+				ctx.fill();
+			}
+		
+		}
 	}
 	hiliteNode(hilited);
 }
@@ -140,7 +166,25 @@ function refresh() {
 function overlayNode(w) {
 	ctx.fillStyle = 'rgba(255,0,0,.8)';
 	for (i in w) {
-		drawSeg(ctx, w[i]);
+		const seg = w[i];
+
+		const dx = grChipOffsetX;
+		const dy = grChipOffsetY;
+		const scaleFactor = grCanvasSize / grChipSize;
+		ctx.beginPath();
+		ctx.moveTo(
+			Math.round((seg[0] + dx)) * scaleFactor, 
+			Math.round((grChipSize - seg[1] + dy)) * scaleFactor);
+		for (var i = 2; i < seg.length; i += 2) {
+			ctx.lineTo(
+				Math.round((seg[i] + dx) * scaleFactor), 
+				Math.round((grChipSize - seg[i + 1] + dy)) * scaleFactor);
+		} 
+		ctx.lineTo(
+			Math.round((seg[0] + dx) * scaleFactor), 
+			Math.round((grChipSize - seg[1] + dy) * scaleFactor)
+			);
+
 		ctx.fill();
 	}
 }
@@ -148,19 +192,18 @@ function overlayNode(w) {
 // originally to highlight using a list of node numbers
 //   but can now include transistor names
 function hiliteNode(n) {
-	var ctx = hilite.getContext('2d');
-	ctx.clearRect(0, 0, grCanvasSize, grCanvasSize);
+	ctxHilite.clearRect(0, 0, grCanvasSize, grCanvasSize);
 	if (n == -1) return;
 	hilited = n;
 
 	for (var i in n) {
 		if (isNodeHigh(n[i])) {
-			ctx.fillStyle = 'rgba(255,0,0,0.7)';
+			ctxHilite.fillStyle = 'rgba(255,0,0,0.7)';
 		} else {
-			ctx.fillStyle = 'rgba(255,255,255,0.7)';
+			ctxHilite.fillStyle = 'rgba(255,255,255,0.7)';
 		}
 		var segs = nodes[n[i]].segs;
-		for (var s in segs) { drawSeg(ctx, segs[s]); ctx.fill(); }
+		for (var s in segs) { drawSeg(ctxHilite, segs[s]); ctxHilite.fill(); }
 	}
 }
 
@@ -180,10 +223,20 @@ function ctxDrawBox(ctx, xMin, yMin, xMax, yMax) {
 function drawSeg(ctx, seg) {
 	var dx = grChipOffsetX;
 	var dy = grChipOffsetY;
+	const scaleFactor = grCanvasSize / grChipSize;
 	ctx.beginPath();
-	ctx.moveTo(grScale(seg[0] + dx), grScale(grChipSize - seg[1] + dy));
-	for (var i = 2; i < seg.length; i += 2) ctx.lineTo(grScale(seg[i] + dx), grScale(grChipSize - seg[i + 1] + dy));
-	ctx.lineTo(grScale(seg[0] + dx), grScale(grChipSize - seg[1] + dy));
+	ctx.moveTo(
+		Math.round((seg[0] + dx)) * scaleFactor, 
+		Math.round((grChipSize - seg[1] + dy)) * scaleFactor);
+	for (var i = 2; i < seg.length; i += 2) {
+		ctx.lineTo(
+			Math.round((seg[i] + dx) * scaleFactor), 
+			Math.round((grChipSize - seg[i + 1] + dy)) * scaleFactor);
+	} 
+	ctx.lineTo(
+		Math.round((seg[0] + dx) * scaleFactor), 
+		Math.round((grChipSize - seg[1] + dy) * scaleFactor)
+		);
 }
 
 function clearHighlight() {
@@ -195,12 +248,6 @@ function clearHighlight() {
 function updateShow(layer, on) {
 	drawlayers[layer] = on;
 	setupBackground();
-}
-
-// we draw the chip data scaled down to the canvas
-// and so avoid scaling a large canvas
-function grScale(x) {
-	return Math.round(x * grCanvasSize / grChipSize);
 }
 
 function localx(el, gx) {
