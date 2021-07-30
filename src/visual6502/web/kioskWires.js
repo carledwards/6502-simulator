@@ -40,9 +40,9 @@ var userResetHigh;
 // if the canvas is any smaller than chip coordinates there will be
 //   rounding artifacts, and at high zoom there will be anti-aliasing on edges.
 var grChipSize = 10000;
-var grChipOffsetX = 400;
+var grChipOffsetX = 0;
 var grChipOffsetY = 0;
-var grCanvasSize = 2000;
+var grCanvasSize = 700;
 var grLineWidth = 1;
 
 // Index of layerNames corresponds to index into drawLayers

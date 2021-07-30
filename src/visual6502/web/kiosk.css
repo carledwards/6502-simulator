@@ -23,30 +23,22 @@
 body {
  background: black;
  color: black;
-/* font-family: cursive;*/
  font-family :Verdana, Arial, Helvetica, Sans-Serif;
  font-size: 12px;
  margin: 0px;
 }
 
-div.frame {
- margin-left: 0px;
- position: relative;
- width: 600px;
- height: 600px;
-}
-
 div.chip {
  background: black;
  position: absolute;
- width: 600px;
- height: 600px;
- overflow: hidden;
+ top: 0;
+ left: 0;
+ height: 100%;
 }
 
 canvas.chip {
  position: absolute;
- width: 600px;
- height: 600px;
- left: 0px;
+ height: 100%;
+ top: 0;
+ left: 0;
 }
