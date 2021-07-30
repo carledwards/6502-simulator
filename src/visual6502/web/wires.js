@@ -28,7 +28,6 @@ var nodenamelist = [];
 var ngnd = nodenames['vss'];
 var npwr = nodenames['vcc'];
 
-var chipLayoutIsVisible = true;  // only modified in expert mode
 var hilited = [];
 
 function setupNodes() {
@@ -129,19 +128,16 @@ function hexdigit(n) { return '0123456789ABCDEF'.charAt(n); }
 /////////////////////////
 
 function refresh() {
-	if (!chipLayoutIsVisible) return;
 	ctx.clearRect(0, 0, grCanvasSize, grCanvasSize);
 	ctx.fillStyle = 'rgba(255,0,0,.8)';
+	ctx.beginPath();
+	const dx = grChipOffsetX;
+	const dy = grChipOffsetY;
+	const scaleFactor = grCanvasSize / grChipSize;
 	for (n in nodes) {
 		if ((nodes[n].state)){
-			// overlayNode(nodes[i].segs);
 			for (i in nodes[n].segs) {
 				const seg = nodes[n].segs[i];
-		
-				var dx = grChipOffsetX;
-				var dy = grChipOffsetY;
-				const scaleFactor = grCanvasSize / grChipSize;
-				ctx.beginPath();
 				ctx.moveTo(
 					Math.round((seg[0] + dx)) * scaleFactor, 
 					Math.round((grChipSize - seg[1] + dy)) * scaleFactor);
@@ -154,13 +150,40 @@ function refresh() {
 					Math.round((seg[0] + dx) * scaleFactor), 
 					Math.round((grChipSize - seg[1] + dy) * scaleFactor)
 					);
-		
-				ctx.fill();
 			}
-		
 		}
 	}
-	hiliteNode(hilited);
+	ctx.fill();
+
+	ctxHilite.clearRect(0, 0, grCanvasSize, grCanvasSize);
+	if (hilited == -1) {
+		return;
+	}
+	for (var i in hilited) {
+		if (isNodeHigh(hilited[i])) {
+			ctxHilite.fillStyle = 'rgba(255,0,0,0.7)';
+		} else {
+			ctxHilite.fillStyle = 'rgba(255,255,255,0.7)';
+		}
+		var segs = nodes[hilited[i]].segs;
+		for (var s in segs) { 
+			const seg = segs[s];
+			ctxHilite.beginPath();
+			ctxHilite.moveTo(
+				Math.round((seg[0] + dx)) * scaleFactor, 
+				Math.round((grChipSize - seg[1] + dy)) * scaleFactor);
+			for (var i = 2; i < seg.length; i += 2) {
+				ctxHilite.lineTo(
+					Math.round((seg[i] + dx) * scaleFactor), 
+					Math.round((grChipSize - seg[i + 1] + dy)) * scaleFactor);
+			} 
+			ctxHilite.lineTo(
+				Math.round((seg[0] + dx) * scaleFactor), 
+				Math.round((grChipSize - seg[1] + dy) * scaleFactor)
+				);
+		}
+		ctxHilite.fill(); 
+	}
 }
 
 function overlayNode(w) {
@@ -185,8 +208,8 @@ function overlayNode(w) {
 			Math.round((grChipSize - seg[1] + dy) * scaleFactor)
 			);
 
-		ctx.fill();
 	}
+	ctx.fill();
 }
 
 // originally to highlight using a list of node numbers
@@ -203,7 +226,10 @@ function hiliteNode(n) {
 			ctxHilite.fillStyle = 'rgba(255,255,255,0.7)';
 		}
 		var segs = nodes[n[i]].segs;
-		for (var s in segs) { drawSeg(ctxHilite, segs[s]); ctxHilite.fill(); }
+		for (var s in segs) { 
+			drawSeg(ctxHilite, segs[s]); 
+		}
+		ctxHilite.fill(); 
 	}
 }
 
@@ -221,8 +247,8 @@ function ctxDrawBox(ctx, xMin, yMin, xMax, yMax) {
 }
 
 function drawSeg(ctx, seg) {
-	var dx = grChipOffsetX;
-	var dy = grChipOffsetY;
+	const dx = grChipOffsetX;
+	const dy = grChipOffsetY;
 	const scaleFactor = grCanvasSize / grChipSize;
 	ctx.beginPath();
 	ctx.moveTo(
