@@ -13,6 +13,10 @@
         <script src="macros.js"></script>
 
         <script type="text/javascript">
+        const animate = new URLSearchParams(window.location.search).get('animate');
+        // animateChipLayout is defined in kioskWires.js
+        animateChipLayout = animate == null || animate === 'true'; 
+
         var hasBeenSetup = false
         function handleOnload() {
             setTimeout(function() {
@@ -65,7 +69,7 @@
                 runChip();
             }
         });
-        
+
         </script>
     </head>
 

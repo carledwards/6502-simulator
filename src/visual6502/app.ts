@@ -36,7 +36,7 @@ io.on("connection", function(client: any) {
 
 let motherboard = new Motherboard(
   runner,
-  50
+  1
 );
 
 // install 8k of RAM
