@@ -23,6 +23,10 @@ export class Motherboard {
         }
     }
 
+    public step() {
+        this.cpu.onClockTick();
+    }
+
     public pause() {
         if (this.clock) {
             clearInterval(this.clock);

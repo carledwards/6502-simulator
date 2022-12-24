@@ -36,6 +36,7 @@ export class ComponentManager {
         if (!startAddress && startAddress != 0) {
             throw new Error(`start Address not found: ${addr.toString(16)}`);
         }
+        // console.log(`write: ${addr.toString(16)}`)
         component.onWriteData(addr - startAddress, data);
     }
 
@@ -45,7 +46,9 @@ export class ComponentManager {
         if (!startAddress && startAddress != 0) {
             throw new Error(`start Address not found: ${addr.toString(16)}`);
         }
-        return component.onReadData(addr - startAddress);
+        let data = component.onReadData(addr - startAddress);
+        // console.log(`read: ${addr.toString(16)} (${data.toString(16)})`);
+        return data;
     }
 
     getComponents(): IterableIterator<Component> {

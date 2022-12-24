@@ -1,9 +1,4 @@
 
-var express = require('express');
-var app = express();
-var server = require('http').createServer(app);
-const io = require("socket.io")(server);
-var path = require('path');
 
 import { CpuRunner } from "./cpu-runner";
 import { Motherboard } from '../motherboard';
@@ -29,14 +24,9 @@ function toHexWord(val: number): string {
  */
 let runner = new CpuRunner();
 
-io.on("connection", function(client: any) {
-    console.log("connection");
-    runner.setSocketClient(client);
-});
-
 let motherboard = new Motherboard(
   runner,
-  50
+  1
 );
 
 // install 8k of RAM
@@ -130,40 +120,14 @@ via6522.on("PORTB", (prevValue:number, newValue:number) => {
     console.log (`\n\nPORT-B LED: 0b${newValue.toString(2).padStart(8, '0')}\n\n`);
 });
 
-
-/**
- * Web server setup
- */
-
-app.use(express.static(__dirname + '/../../node_modules'));
-app.use(express.static(__dirname + '/web'));
-
-app.get('/', function(req: any, res: any) {
-    res.sendFile(path.resolve(__dirname + '/web/index.html'));
-});
-
-app.get('/cpu/data/write/:addr/:data', function(req: any, res: any) {
-    console.log(`write: ${toHexWord(parseInt(req.params.addr))}:${toHexByte(parseInt(req.params.data))}`);
-    runner.busOperations!.writeData(req.params.addr, req.params.data);
-    res.send({});
-});
-
-app.get('/cpu/data/read/:addr', function(req: any, res: any) {
-    var data = 0;
-    try {
-        data = runner.busOperations!.readData(req.params.addr);
-    } catch (error) {
-        data = 0;
+function runTheClock() {
+    for(var i=0; i < 100; i++) {
+        motherboard.step();
     }
-    console.log(`read: ${toHexWord(parseInt(req.params.addr))}:${toHexByte(data)}`);
-    res.send({"addr": req.params.addr, "data": data});
-});
+    setImmediate(runTheClock)
+}
 
-server.listen(3000, () => {
-    console.log('server is listening on port 3000');
-
-    // reset the motherboard and start it up
-    runner.onReset();
-    motherboard.reset();
-    motherboard.resume();
-});
+// reset the motherboard and start it up
+runner.onReset();
+motherboard.reset();
+runTheClock()
