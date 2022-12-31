@@ -12696,10 +12696,9 @@ export function setupTransistors() {
 		var gate = tdef[1];
 		var c1 = tdef[2];
 		var c2 = tdef[3];
-		var bb = tdef[4];
 		if (c1 == ngnd) { c1 = c2; c2 = ngnd; }
 		if (c1 == npwr) { c1 = c2; c2 = npwr; }
-		var trans = { name: name, on: false, gate: gate, c1: c1, c2: c2, bb: bb };
+		var trans = { name: name, on: false, gate: gate, c1: c1, c2: c2 };
 		nodes[gate].gates.push(trans);
 		nodes[c1].c1c2s.push(trans);
 		nodes[c2].c1c2s.push(trans);
@@ -12722,16 +12721,25 @@ function recalcNodeList(list) {
 		recalclist = new Array();
 		recalcHash = new Array();
 	}
-    console.log(`${list.length}`)
 }
 
 function recalcNode(node) {
 	if (node == ngnd) return;
 	if (node == npwr) return;
+    // if (debug) {
+    //     var n = nodes[node]
+    //     console.log("recalc node: " + node + " " + n.pullup + ", " + n.pulldown + ", " + n.state)
+    // }
 	getNodeGroup(node);
 	var newState = getNodeValue();
+    // if (debug) {
+    //     console.log("getNodeValue returned: " + newState)
+    // }
 	group.forEach(function (i) {
 		var n = nodes[i];
+        // if (debug) {
+        //     console.log('group id: ' + i + ": " + n.state + ": " + newState)
+        // }
 		if (n.state == newState) return;
 		n.state = newState;
 		n.gates.forEach(function (t) {
@@ -12742,12 +12750,18 @@ function recalcNode(node) {
 }
 
 function turnTransistorOn(t) {
+    // if (debug) {
+    //     console.log("ton:  " + t.name + " : " + t.on)
+    // }
 	if (t.on) return;
 	t.on = true;
 	addRecalcNode(t.c1);
 }
 
 function turnTransistorOff(t) {
+    // if (debug) {
+    //     console.log("toff: " + t.name + " : " + t.on)
+    // }
 	if (!t.on) return;
 	t.on = false;
 	addRecalcNode(t.c1);
@@ -12767,13 +12781,19 @@ function getNodeGroup(i) {
 	addNodeToGroup(i);
 }
 
+// var debug = false
+
 function addNodeToGroup(i) {
 	if (group.indexOf(i) != -1) return;
+    // if (debug) {
+    //     console.log("add node: " + i);
+    // }
 	group.push(i);
 	if (i == ngnd) return;
 	if (i == npwr) return;
 	nodes[i].c1c2s.forEach(
 		function (t) {
+            // if (debug) console.log("trans: " + t.name + ": " + t.on)
 			if (!t.on) return;
 			var other;
 			if (t.c1 == i) other = t.c2;
@@ -12783,12 +12803,18 @@ function addNodeToGroup(i) {
 }
 
 function getNodeValue() {
+    // if (debug) {
+    //     console.log("getNodeValue: " + group)
+    // }
 	if (arrayContains(group, ngnd)) return false;
 	if (arrayContains(group, npwr)) return true;
 	for (var i in group) {
 		var nn = group[i];
 		var n = nodes[nn];
-		if (n.pullup) return true;
+        // if (debug) {
+        //     console.log("getNodeValue: " + nn + " " + n.pullup + ", " + n.pulldown + ", " + n.state)
+        // }
+        if (n.pullup) return true;
 		if (n.pulldown) return false;
 		if (n.state) return true;
 	}
@@ -12846,21 +12872,32 @@ export function initChip(memReadFunction, memWriteFunction) {
 	for (var tn in transistors) {
         transistors[tn].on = false;
     }
-	setLow(nodenamereset);
+
+    // console.log('rdy: ' + nodes[89].state)
+    // debug = true
+    setLow(nodenamereset);
+    // console.log('clk0 start 0 ' + nodes[1155].state + ", " + nodes[558].state + ", " + nodes[252].state)
 	setLow('clk0');
+    // console.log('clk0 start 1 ' + nodes[1155].state + ", " + nodes[558].state + ", " + nodes[252].state)
 	setHigh('rdy'); setLow('so');
 	setHigh('irq'); setHigh('nmi');
+    // console.log('clk0 start 2 ' + nodes[1155].state + ", " + nodes[558].state + ", " + nodes[252].state)
 	recalcNodeList(allNodes());
+    // console.log('clk0 start 3 ' + nodes[1155].state + ", " + nodes[558].state + ", " + nodes[252].state)
 	for (var i = 0; i < (8); i++) { 
         setHigh('clk0');
+        // console.log('clk0 high: ' + nodes[1155].state + ", " + nodes[558].state + ", " + nodes[252].state)
         setLow('clk0'); 
+        // console.log('clk0 low:  ' + nodes[1155].state + ", " + nodes[558].state + ", " + nodes[252].state)
     }
 	setHigh(nodenamereset);
 	for (var i = 0; i < (6); i++) { 
         setHigh('clk0');
+        // console.log('clk0 high: ' + nodes[1155].state + ", " + nodes[558].state + ", " + nodes[252].state)
         setLow('clk0'); 
+        // console.log('clk0 low:  ' + nodes[1155].state + ", " + nodes[558].state + ", " + nodes[252].state)
     }
-
+    // debug = false
     gExternalMemReadFunction = memReadFunction;
     gExternalMemWriteFunction = memWriteFunction;
 }

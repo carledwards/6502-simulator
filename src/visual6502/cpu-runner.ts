@@ -22,14 +22,15 @@ export class CpuRunner implements Cpu {
             (a: number, d: number)=>{
                 this.busOperations!.writeData(a, d);
         })
-        console.log("init chip completed");
         this.hasBeenSetup = true;
     }
 
     onClockTick(): void {
         this.tickCount++;
-        if (this.tickCount % 1000 == 0) {
-            console.log(this.tickCount);
+        if (this.tickCount % 10000 == 0) {
+            console.timeEnd("10000ticks")
+            // console.log(this.tickCount);
+            console.time("10000ticks");
         }
         // console.log(`nmi: ${Visual6502.isNodeHigh(Visual6502.nodenames['nmi'])}, irq: ${Visual6502.isNodeHigh(Visual6502.nodenames['irq'])}`)
         if (this.busOperations!.isNMI()) {
